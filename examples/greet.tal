@@ -1,0 +1,5 @@
+fun greet(name) {
+  printf('Hello, %0!', [name])
+}
+
+greet(getstr('What is your name? '))

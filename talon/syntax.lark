@@ -1,0 +1,104 @@
+start: [main_instruction* end_instruction]
+
+// Main instructions need a semicolon or a newline (except control flow blocks),
+?main_instruction: instruction (";" | "\n")
+                | if_ (";" | "\n")?
+                | if_else (";" | "\n")?
+                | for_ (";" | "\n")?
+                | while_ (";" | "\n")?
+                | fun_def (";" | "\n")?
+
+// but last ones don't.
+?end_instruction: instruction (";" | "\n")?
+                | if_ (";" | "\n")?
+                | if_else (";" | "\n")?
+                | for_ (";" | "\n")?
+                | while_ (";" | "\n")?
+                | fun_def (";" | "\n")?
+
+// Instructions are the "commands" of the language.
+?instruction: assign_var
+            | assign_value
+            | list_assign
+            | fun_call
+            | return_
+            | break_
+
+assign_var: "this" NAME ["=" expression]
+assign_value: NAME ASSIGN_OP expression
+list_assign: NAME "[" expression "]" ASSIGN_OP expression
+ASSIGN_OP: "=" | "+=" | "-=" | "*=" | "/=" | "^=" | "%="
+if_: "if" "(" expression ")" codeblock
+if_else: "if" "(" expression ")" codeblock "else" (codeblock | if_else | if_)
+for_: "for" "(" NAME "in" expression ")" codeblock
+while_: "while" "(" expression ")" codeblock
+break_: "break"
+fun_def: "fun" NAME "(" fun_args ")" codeblock
+fun_args: [NAME ("," NAME)*]
+fun_call: NAME "(" [expression ("," expression)*] ")"
+return_: "ret" [expression]
+codeblock: "{" [main_instruction* end_instruction] "}"
+list: "[" [expression ("," expression)* ","?] "]"
+list_access: value "[" expression "]"
+list_slice: value "[" [expression] ":" [expression] "]"
+
+?expression: or_
+
+
+// Math
+?or_: and_
+    | or_ "||" and_
+
+?and_: compare
+    | and_ "&&" compare
+
+?compare: sum
+        | compare "==" sum  -> eq
+        | compare "!=" sum  -> neq
+        | compare "<" sum   -> lt
+        | compare ">" sum   -> gt
+        | compare "<=" sum  -> lteq
+        | compare ">=" sum  -> gteq
+
+?sum: product
+    | sum "+" product   -> add
+    | sum "-" product   -> sub
+
+?product: exponent
+        | product "*" exponent -> mul
+        | product "/" exponent -> div
+        | product "%" exponent -> mod
+
+?exponent: value
+        | value "^" exponent  -> pow
+
+?value: NUMBER            -> num
+      | STRING            -> string
+      | NAME              -> var
+      | ("true" | "on" | "yes")   -> true
+      | ("false" | "off" | "no")  -> false
+      | fun_call
+      | list
+      | list_access
+      | list_slice
+      | value "to" value    -> range_incl // Inclusive range
+      | value "upto" value  -> range_excl // Exlusive range
+      | "-" value         -> neg
+      | "+" value         -> abs  // +x acts as the absolute value of x
+      | "!" value         -> not_
+      | "(" expression ")"
+
+
+// Constants
+NAME.-1: /(?!(\b(this|if|else|true|false|on|off|yes|no|for|in|while|to|upto|fun|ret|break)\b))/ CNAME
+STRING: /".*?(?<!\\)(\\\\)*?"|'.*?(?<!\\)(\\\\)*?'/
+COMMENT: "//" /[^\n]/*
+      | /\/\*(.|\n)*?\*\//
+
+
+// Imports
+%import common.SIGNED_NUMBER  -> NUMBER
+%import common.CNAME
+%import common.WS
+%ignore WS
+%ignore COMMENT

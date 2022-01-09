@@ -1,0 +1,6 @@
+*.talc
+
+# Just for now
+setup.py
+
+__pycache__

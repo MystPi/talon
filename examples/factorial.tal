@@ -1,0 +1,11 @@
+fun factorial(n) {
+  if (n == 1) {
+    ret 1
+  } else {
+    ret n * factorial(n - 1)
+  }
+}
+
+this f = factorial(4)
+
+print(f) // -> 24
