@@ -1,5 +1,4 @@
-from tinted.core import tint
-import nodes, math, random, re, tinted
+import nodes, math, random, re, tinted, talon
 
 
 def format(string, list):
@@ -24,6 +23,11 @@ def printc(string):
     print(colored(string))
 
 
+def import_(name):
+    with open(name, 'r') as f:
+        talon.transform(talon.parse(f.read())).eval()
+
+
 def define_builtins():
     table = nodes.symbols
     b = nodes.BuiltinFunc
@@ -34,6 +38,7 @@ def define_builtins():
     table.set_func('getstr', b(input))
     table.set_func('format', b(format))
     table.set_func('colored', b(colored))
+    table.set_func('import', b(import_))
 
     # Math
     table.set_func('int', b(int))

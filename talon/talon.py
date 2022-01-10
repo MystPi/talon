@@ -1,14 +1,17 @@
 from lark import Lark, UnexpectedInput
 from transformer import Transformer
-from environment import define_builtins
-import pickle, os, tinted
+import pickle, os, tinted, environment
 
 
 def parse(code):
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'syntax.lark'), 'r') as f:
         syntax = f.read()
     parser = Lark(syntax)
-    return parser.parse(code)
+    try:
+        return parser.parse(code)
+    except UnexpectedInput as e:
+        print(tinted.tint(f'[red][bold]Syntax error[/][/] at [blue][bold]line[/][/] {e.line}, [blue][bold]column[/][/] {e.column}\n\n{e.get_context(code)}'))
+        exit(1)
 
 
 def transform(tree):
@@ -17,7 +20,7 @@ def transform(tree):
 
 
 def execute(transformed):
-    define_builtins()
+    environment.define_builtins()
     return transformed.eval()
 
 
@@ -25,11 +28,7 @@ def talon(inputfile: str, compile=False, outputfile=None):
     if inputfile.endswith('.tal'):
         with open(inputfile, 'r') as input:
             code = input.read()
-            try:
-                temp = transform(parse(code))
-            except UnexpectedInput as e:
-                print(tinted.tint(f'[red][bold]Syntax error[/][/] at [blue][bold]line[/][/] {e.line}, [blue][bold]column[/][/] {e.column}\n\n{e.get_context(code)}'))
-                return
+            temp = transform(parse(code))
     elif inputfile.endswith('.talc'):
         with open(inputfile, 'rb') as f:
             temp = pickle.load(f)
@@ -47,6 +46,7 @@ def talon(inputfile: str, compile=False, outputfile=None):
 
     except Exception as e:
         print(tinted.tint(f'[red][bold]{str(e.__class__.__name__)}[/][/]: {str(e)}'))
+        exit(1)
 
 
 def main():
