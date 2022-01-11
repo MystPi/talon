@@ -25,8 +25,11 @@ printf('Your name is %0; it has %1 characters.', [name, length])
 > You can view more demos in the [examples](examples/) folder.
 
 ## Running and Compiling Code
-Talon is not yet on PyPi, so to run/compile Talon code, you must directly execute a Python script.
-
+First you must install Talon.
+```bash
+pip install talonlang
+```
+Then you can run Talon programs:
 ```bash
 python talon.py [-c] <input.tal[c]> [-o <output.talc>]
 ```

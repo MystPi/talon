@@ -1,6 +1,7 @@
 from lark import Lark, UnexpectedInput
-from transformer import Transformer
-import pickle, os, tinted, environment
+from .transformer import Transformer
+import pickle, os, tinted
+from . import environment
 
 
 def parse(code):
@@ -32,6 +33,9 @@ def talon(inputfile: str, compile=False, outputfile=None):
     elif inputfile.endswith('.talc'):
         with open(inputfile, 'rb') as f:
             temp = pickle.load(f)
+    else:
+        print(tinted.tint('[red][bold]Error[/][/]: Invalid file extension'))
+        exit(1)
     try:
         if compile:
             if outputfile is None:
@@ -59,6 +63,7 @@ def main():
         talon(sys.argv[2], compile=True, outputfile=sys.argv[4])
     else:
         print('Usage: talon [-c] <input.tal[c]> [-o <output.talc>]')
+        exit(1)
 
 
 if __name__ == '__main__':

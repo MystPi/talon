@@ -1,4 +1,5 @@
-import nodes, math, random, re, tinted, talon
+import math, random, re, tinted
+from . import nodes, talon
 
 
 def format(string, list):

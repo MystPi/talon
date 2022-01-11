@@ -1,5 +1,5 @@
 from types import LambdaType
-import symbols as s
+from . import symbols as s
 import operator
 
 symbols = s.SymbolTable()

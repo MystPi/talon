@@ -1,5 +1,5 @@
 import lark
-import nodes
+from . import nodes
 
 
 class Transformer(lark.Transformer):
