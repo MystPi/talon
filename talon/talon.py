@@ -62,7 +62,7 @@ def main():
     elif len(sys.argv) == 5 and sys.argv[1] == '-c' and sys.argv[3] == '-o':
         talon(sys.argv[2], compile=True, outputfile=sys.argv[4])
     else:
-        print('Usage: talon [-c] <input.tal[c]> [-o <output.talc>]')
+        print('Usage: tal [-c] <input.tal[c]> [-o <output.talc>]')
         exit(1)
 
 
