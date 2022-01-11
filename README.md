@@ -30,8 +30,7 @@ First you must install Talon.
 pip install talonlang
 ```
 Then you can run Talon programs:
-```bash
-python talon.py [-c] <input.tal[c]> [-o <output.talc>]
+tal [-c] <input.tal[c]> [-o <output.talc>]
 ```
 - The `-c` switches on compiling. If no `-o` flag is provided (along with a filename), the output file will be named according to the input file. Eg. `input.tal` to `input.talc`. (Note: you may compile already compiled code, but that is redundant and pointless.)
 - The `-o` flag changes the name of the output file. It can only be used if `-c` is present.
