@@ -60,14 +60,5 @@ class SymbolTable:
                 else:
                     raise SymbolNotFound(f'Symbol "{sym}" not found')
 
-    def get_func(self, func):
-        if func in self.__table[self.__func]:
-            return self.__table[self.__func][func]
-
-        raise FunctionNotFound(f'Function "{func}" not found')
-
-    def set_func(self, func, val):
-        if func in self.__table[self.__func]:
-            raise FunctionExists(f'Function "{func}" cannot be redefined')
-        
-        self.__table[self.__func][func] = val
+    def set_global(self, sym, val):
+        self.__table[self.__sym][sym] = val

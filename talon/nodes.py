@@ -41,6 +41,11 @@ class BaseExpr:
         return NotImplementedError()
 
 
+class CallableExpr:
+    def eval(self):
+        return NotImplementedError()
+
+
 class ExitInstruction(BaseExpr):
     def __iter__(self):
         return []
@@ -87,8 +92,6 @@ class Primitive(BaseExpr):
 
 
 class Identifier(BaseExpr):
-    is_func = False
-
     def __init__(self, name):
         self.name = name
 
@@ -96,15 +99,9 @@ class Identifier(BaseExpr):
         return f'<Identifier {self.name}>'
 
     def assign(self, value, new=False):
-        if self.is_func:
-            symbols.set_func(self.name, value)
-        else:
-            symbols.set_sym(self.name, value, new=new)
+        symbols.set_sym(self.name, value, new=new)
 
     def eval(self):
-        if self.is_func:
-            return symbols.get_func(self.name)
-
         return symbols.get_sym(self.name)
 
 
@@ -132,16 +129,32 @@ class ListAccess(BaseExpr):
 
 
 class ListAssign(BaseExpr):
-    def __init__(self, list: Identifier, index: BaseExpr, value: BaseExpr):
+    __ops = {
+        '+=': operator.iadd,
+        '-=': operator.isub,
+        '*=': operator.imul,
+        '/=': operator.itruediv,
+        '%=': operator.imod,
+        '^=': operator.ipow
+    }
+
+    def __init__(self, list: BaseExpr, index: BaseExpr, op: BaseExpr, value: BaseExpr):
         self.list = list
         self.index = index
+        self.op = op
         self.value = value
 
     def __repr__(self):
-        return f'<List list={self.list!r} index={self.index!r} value={self.value!r}>'
+        return f'<List list={self.list!r} index={self.index!r} op={self.op!r} value={self.value!r}>'
 
     def eval(self):
-        self.list.eval()[self.index.eval()] = self.value.eval()
+        list = self.list.eval()
+        index = self.index.eval()
+        value = self.value.eval()
+        if self.op == '=':
+            list[index] = value
+        else:
+            list[index] = self.__ops[self.op](list[index], value)
 
 
 class ListSlice(BaseExpr):
@@ -190,10 +203,7 @@ class Assignment(BaseExpr):
         return f'<Assignment new={self.new} identifier={self.identifier!r} value={self.value!r}>'
 
     def eval(self):
-        if self.identifier.is_func:
-            self.identifier.assign(self.value)
-        else:
-            self.identifier.assign(self.value.eval(), new=self.new)
+        self.identifier.assign(self.value.eval(), new=self.new)
 
 
 class CompOp(BaseExpr):
@@ -339,15 +349,19 @@ class While(BaseExpr):
                 break
 
 
-class Function(BaseExpr):
+class Function(CallableExpr):
     def __init__(self, params: Instructions, body: Instructions):
         self.params = params
         self.body = body
 
     def __repr__(self):
-        return f'<Function params={self.params!r} body={self.body!r}>'
+        # TODO: Improve string representation
+        return f'<Function params={len(self.params)!r}>'
 
-    def eval(self, args):
+    def eval(self, args=None):
+        if args is None:
+            return self
+
         symbols.set_local(True)
 
         for key, value in args.items():
@@ -365,15 +379,15 @@ class Function(BaseExpr):
 
 
 class FunctionCall(BaseExpr):
-    def __init__(self, name: Identifier, params: Instructions):
-        self.name = name
+    def __init__(self, value, params: Instructions):
+        self.value = value
         self.params = params
 
     def __repr__(self):
-        return f'<Function call name={self.name!r} params={self.params!r}>'
+        return f'<Function call value={self.value!r} called_with_params={len(self.params)!r}>'
 
     def __builtin_func(self):
-        func = self.name.eval()
+        func = self.value.eval()
         args = []
 
         for param in self.params:
@@ -382,14 +396,14 @@ class FunctionCall(BaseExpr):
         return func.eval(args)
 
     def __user_func(self):
-        func = self.name.eval()
+        func = self.value.eval()
         args = {}
 
         length1 = len(func.params)
         length2 = len(self.params)
 
         if length1 != length2:
-            raise NameError(f'Invalid amount of args for "{self.name.name}". Got {length2}, expected {length1}')
+            raise NameError(f'Invalid amount of args for "{self.value}". Got {length2}, expected {length1}')
 
         for param, value in zip(func.params, self.params):
             args[param.name] = full_eval(value)
@@ -397,18 +411,26 @@ class FunctionCall(BaseExpr):
         return func.eval(args)
 
     def eval(self):
-        if isinstance(self.name.eval(), BuiltinFunc):
+        func = self.value.eval()
+
+        if not isinstance(func, CallableExpr):
+            raise TypeError(f'{self.value!r} is not a function')
+
+        if isinstance(func, BuiltinFunc):
             return self.__builtin_func()
 
         return self.__user_func()
 
 
-class BuiltinFunc(BaseExpr):
+class BuiltinFunc(CallableExpr):
     def __init__(self, func):
         self.func = func
 
     def __repr__(self):
         return f'<Builtin func {self.func!r}>'
 
-    def eval(self, args):
+    def eval(self, args=None):
+        if args is None:
+            return self
+
         return self.func(*args)

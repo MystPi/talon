@@ -10,7 +10,12 @@ class Transformer(lark.Transformer):
         return nodes.Instructions(args)
 
     def num(self, args):
-        return nodes.Primitive(int(args[0]))
+        num = args[0]
+        if '.' in num:
+            num = float(num)
+        else:
+            num = int(num)
+        return nodes.Primitive(num)
 
     def string(self, args):
         s = args[0][1:-1]
@@ -27,6 +32,9 @@ class Transformer(lark.Transformer):
         return nodes.Primitive(False)
 
     def list(self, args):
+        # Lists are simply an Instructions object. When evaled, an
+        # Instructions object will return a list of all of its
+        # evaluated values.
         return nodes.List(nodes.Instructions(args))
 
     def list_access(self, args):
@@ -36,7 +44,7 @@ class Transformer(lark.Transformer):
         return nodes.ListSlice(args[0], args[1], args[2])
 
     def list_assign(self, args):
-        return nodes.ListAssign(nodes.Identifier(args[0].value), args[1], args[3])
+        return nodes.ListAssign(args[0], args[1], args[2], args[3])
 
     def range_incl(self, args):
         return nodes.Range(args[0], args[1], True)
@@ -127,9 +135,18 @@ class Transformer(lark.Transformer):
         return nodes.ReturnInstruction(args[0])
 
     def fun_def(self, args):
-        id = nodes.Identifier(args[0].value)
-        id.is_func = True
-        return nodes.Assignment(id, nodes.Function(args[1], args[2]), new=True)
+        # Create and assign a function to a variable.
+        return nodes.Assignment(nodes.Identifier(args[0].value), nodes.Function(args[1], args[2]), new=True)
+
+    def anon_fun(self, args):
+        return nodes.Function(args[0], args[1])
+
+    def lambda_(self, args):
+        # Lambdas are the almost same as anonymous functions, their one difference
+        # being they have a single expression as their body instead of a codeblock.
+        # This means that we have to create a 'mini codeblock' with a single
+        # return instruction as the body.
+        return nodes.Function(args[0], nodes.Instructions([nodes.ReturnInstruction(args[1])]))
 
     def fun_args(self, args):
         # args[0] can be None, meaning there are no arguments
@@ -140,6 +157,4 @@ class Transformer(lark.Transformer):
         return nodes.Instructions(temp)
 
     def fun_call(self, args):
-        id = nodes.Identifier(args[0].value)
-        id.is_func = True
-        return nodes.FunctionCall(id, nodes.Instructions(args[1:]))
+        return nodes.FunctionCall(args[0], nodes.Instructions(args[1:]))

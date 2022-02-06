@@ -23,19 +23,22 @@ start: [main_instruction* end_instruction]
             | fun_call
             | return_
             | break_
+            | expression // Expressions can be instructions too.
 
 assign_var: "this" NAME ["=" expression]
 assign_value: NAME ASSIGN_OP expression
-list_assign: NAME "[" expression "]" ASSIGN_OP expression
-ASSIGN_OP: "=" | "+=" | "-=" | "*=" | "/=" | "^=" | "%="
+list_assign: value "[" expression "]" ASSIGN_OP expression
 if_: "if" "(" expression ")" codeblock
 if_else: "if" "(" expression ")" codeblock "else" (codeblock | if_else | if_)
 for_: "for" "(" NAME "in" expression ")" codeblock
 while_: "while" "(" expression ")" codeblock
 break_: "break"
 fun_def: "fun" NAME "(" fun_args ")" codeblock
+anon_fun: "fun" "(" fun_args ")" codeblock
+        | "(" fun_args ")" "->" codeblock
+        | "(" fun_args ")" "->" "(" [expression] ")" -> lambda_
 fun_args: [NAME ("," NAME)*]
-fun_call: NAME "(" [expression ("," expression)*] ")"
+fun_call: value "(" [expression ("," expression)*] ")"
 return_: "ret" [expression]
 codeblock: "{" [main_instruction* end_instruction] "}"
 list: "[" [expression ("," expression)* ","?] "]"
@@ -43,6 +46,7 @@ list_access: value "[" expression "]"
 list_slice: value "[" [expression] ":" [expression] "]"
 
 ?expression: or_
+           | anon_fun
 
 
 // Math
@@ -90,6 +94,7 @@ list_slice: value "[" [expression] ":" [expression] "]"
 
 
 // Constants
+ASSIGN_OP: "=" | "+=" | "-=" | "*=" | "/=" | "^=" | "%="
 NAME.-1: /(?!(\b(this|if|else|true|false|on|off|yes|no|for|in|while|to|upto|fun|ret|break)\b))/ CNAME
 STRING: /".*?(?<!\\)(\\\\)*?"|'.*?(?<!\\)(\\\\)*?'/
 COMMENT: "//" /[^\n]/*

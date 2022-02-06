@@ -1,5 +1,6 @@
 from lark import Lark, UnexpectedInput
 from .transformer import Transformer
+from .__init__ import __version__
 import pickle, os, tinted
 from . import environment
 
@@ -55,7 +56,9 @@ def talon(inputfile: str, compile=False, outputfile=None):
 
 def main():
     import sys
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 2 and (sys.argv[1] == '--version' or sys.argv[1] == '-v'):
+        print(__version__)
+    elif len(sys.argv) == 2:
         talon(sys.argv[1])
     elif len(sys.argv) == 3 and sys.argv[1] == '-c':
         talon(sys.argv[2], compile=True)

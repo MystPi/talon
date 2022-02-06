@@ -1,0 +1,7 @@
+this greet = (name) -> {
+  printf('Hello, %0!', [name])
+}
+
+this call = (f, a) -> (f(a))
+
+call(greet, "Noah")
