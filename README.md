@@ -166,11 +166,24 @@ for (letter in alphabet) {
 ```
 
 ### Functions
-Functions are defined via the `fun` keyword:
+Functions can be created by a variety of methods:
 ```
 fun foo(bar) {
   ret bar * 2
 }
+```
+```
+this foo = fun (bar) {
+  ret bar * 2
+}
+```
+```
+this foo = (bar) -> {
+  ret bar * 2
+}
+```
+```
+this foo = (bar) -> (bar * 2)
 ```
 They have their own scope:
 ```
