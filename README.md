@@ -25,9 +25,12 @@ printf('Your name is %0; it has %1 characters.', [name, length])
 > You can view more demos in the [examples](examples/) folder.
 
 ## Running and Compiling Code
-First you must install Talon.
+First you must build and install Talon.
 ```bash
-pip install talonlang
+git clone https://github.com/MystPi/talon.git
+cd talon
+python setup.py build
+sudo setup.py build
 ```
 Then you can run Talon programs:
 ```bash
